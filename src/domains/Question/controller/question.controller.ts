@@ -71,6 +71,6 @@ export class QuestionController {
       req.params.publicId as string,
     );
 
-    res.status(200).json(success(result, "Question deleted successfully"));
+    res.status(HttpStatus.OK).json(success(result, "Question deleted successfully"));
   };
 }
