@@ -20,7 +20,7 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ unique:true })
+  @Column({ unique: true })
   @Generated("uuid")
   publicId: string;
 

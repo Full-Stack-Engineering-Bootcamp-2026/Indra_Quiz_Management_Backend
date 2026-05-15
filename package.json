@@ -42,7 +42,8 @@
     "mysql2": "^3.22.3",
     "reflect-metadata": "^0.2.2",
     "typedi": "^0.10.0",
-    "typeorm": "^0.3.28",
-    "winston": "^3.19.0"
+    "typeorm": "^0.3.29",
+    "winston": "^3.19.0",
+    "zod": "^4.4.3"
   }
 }

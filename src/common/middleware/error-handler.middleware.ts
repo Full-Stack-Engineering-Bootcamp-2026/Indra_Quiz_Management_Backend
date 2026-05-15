@@ -35,7 +35,7 @@ export const errorHandler = (
   err: Error,
   req: Request,
   res: Response,
-  _next: NextFunction
+  _next: NextFunction,
 ): void => {
   logger.error("Error occurred", {
     message: err.message,

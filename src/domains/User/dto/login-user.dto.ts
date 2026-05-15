@@ -11,7 +11,11 @@ export interface ExampleOutDto {
   updatedAt: Date | null;
   isActive: boolean;
 }
+export class LoginUserDto {
+  email: string;
 
+  password: string;
+}
 /**
  * Create DTO — fields required to create a new resource
  */
@@ -31,4 +35,10 @@ export interface ExampleUpdateDto {
   col2?: string;
   col3?: string;
   isActive?: boolean;
+}
+
+export interface RegisterUserDto {
+  name: string;
+  email: string;
+  password: string;
 }

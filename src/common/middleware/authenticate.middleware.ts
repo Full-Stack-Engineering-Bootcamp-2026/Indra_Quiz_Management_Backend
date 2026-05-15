@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { HttpStatus } from "../constants/http-status.constants";
 import { AuthErrorMessages } from "../constants/auth-error-messages.constants";
-import { UserRole } from "../../domains/user/entities/user.entity";
+import { UserRole } from "../../domains/User/entities/user.entity";
 import { AuthRequest } from "../interfaces/auth-request.interface";
 
 /**
@@ -25,7 +25,7 @@ import { AuthRequest } from "../interfaces/auth-request.interface";
 export const authenticate = async (
   req: AuthRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
@@ -58,8 +58,8 @@ export const authenticate = async (
     }
 
     let payload: {
-      userId: number,
-      email: string,
+      userId: number;
+      email: string;
       role: UserRole;
     };
 

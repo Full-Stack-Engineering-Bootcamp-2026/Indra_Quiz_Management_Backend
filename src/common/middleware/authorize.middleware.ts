@@ -5,7 +5,7 @@ import {
   getAccessDeniedMessage,
   getAllRolesRequiredMessage,
 } from "../constants/auth-error-messages.constants";
-import { UserRole } from "../../domains/user/entities/user.entity";
+import { UserRole } from "../../domains/User/entities/user.entity";
 import { AuthRequest } from "../interfaces/auth-request.interface";
 
 /**
@@ -26,7 +26,7 @@ import { AuthRequest } from "../interfaces/auth-request.interface";
  *
  * @param roles - One or more role names; user must have at least one
  * @returns Express middleware function
- * 
+ *
  * @example
  * User must have at least ONE of the specified roles
  * router.post('/reports', authenticate, requireRole('ADMIN', 'MANAGER'), handler);
@@ -62,7 +62,7 @@ export const requireRole = (...roles: UserRole[]) => {
  *
  * @param roles - All roles that the user must have
  * @returns Express middleware function
- * 
+ *
  * @example
  * User must have ALL specified roles
  * router.post('/audit-log', authenticate, requireAllRoles('ADMIN', 'AUDITOR'), handler);

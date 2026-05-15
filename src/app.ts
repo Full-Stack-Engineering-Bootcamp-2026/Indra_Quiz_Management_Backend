@@ -1,25 +1,44 @@
-import express, { Application as ExpressApp, Request, Response } from "express";
+import express, {
+  Application as ExpressApp,
+  Request,
+  Response,
+  Router,
+} from "express";
+
 import dotenv from "dotenv";
 import cors from "cors";
 import "reflect-metadata";
-import { AppDataSource } from "./db/db";
-import { success, failure } from "./Http_Response/response";
+
 import Container from "typedi";
-import { errorHandler, notFoundHandler } from "./common/middleware/error-handler.middleware";
-import { authenticate } from "./common/middleware/authenticate.middleware";
-import { requireRole } from "./common/middleware/authorize.middleware";
+
+import { AppDataSource } from "./db/db";
+
+import { success } from "./Http_Response/response";
+
+import {
+  errorHandler,
+  notFoundHandler,
+} from "./common/middleware/error-handler.middleware";
+
+import { UserRoutes } from "./domains/User/routes/user.routes";
+
 dotenv.config();
 
 class Application {
   public app: ExpressApp;
-  private port: number;
+
+  private readonly port: number;
 
   constructor() {
     this.app = express();
+
     this.port = parseInt(process.env.PORT || "3000", 10);
 
     this.initializeMiddleware();
+
     this.initializeRoutes();
+
+    this.initializeErrorHandling();
   }
 
   private initializeMiddleware(): void {
@@ -36,31 +55,48 @@ class Application {
             callback(new Error(`CORS not allowed: ${origin}`));
           }
         },
+
         credentials: true,
       }),
     );
 
     this.app.use(express.json());
-    this.app.use(express.urlencoded({ extended: true }));
+
+    this.app.use(
+      express.urlencoded({
+        extended: true,
+      }),
+    );
   }
 
   private initializeRoutes(): void {
-    this.app.get("/", (_req: Request, res: Response) => {
-      return res.json(success(null, "Server is running"));
+    const v1Router = Router();
+
+    v1Router.get("/health", (_req: Request, res: Response) => {
+      return res.status(200).json(success(null, "Server is running"));
     });
 
-    // const exampleRoutes = Container.get(ExampleRoutes)
-    // this.app.use("/api/example", exampleRoutes.getRoutes())
+    const userRoutes = Container.get(UserRoutes);
+
+    v1Router.use("/users", userRoutes.router);
+
+    this.app.use("/api/v1", v1Router);
+  }
+
+  private initializeErrorHandling(): void {
     this.app.use(notFoundHandler);
+
     this.app.use(errorHandler);
   }
 
   private async connectDatabase(): Promise<void> {
     try {
       await AppDataSource.initialize();
-      console.log("MySQL connected");
+
+      console.log("MySQL connected successfully");
     } catch (error) {
       console.error("Database connection failed", error);
+
       process.exit(1);
     }
   }
@@ -73,12 +109,13 @@ class Application {
         console.log(`Server running at http://localhost:${this.port}`);
       });
     } catch (error) {
-      console.error("Startup failed", error);
+      console.error("Application startup failed", error);
     }
   }
 }
 
 const application = new Application();
+
 application.start();
 
 export default application.app;

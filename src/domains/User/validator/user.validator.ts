@@ -1,4 +1,4 @@
-import Joi from 'joi';
+import Joi from "joi";
 
 export const createExampleSchema = Joi.object({
   name: Joi.string().required(),
@@ -6,6 +6,7 @@ export const createExampleSchema = Joi.object({
   col2: Joi.string().required(),
   col3: Joi.string().required(),
 });
+
 
 export const updateExampleSchema = Joi.object({
   name: Joi.string(),
