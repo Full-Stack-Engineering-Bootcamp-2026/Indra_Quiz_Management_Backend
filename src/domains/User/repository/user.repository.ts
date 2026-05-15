@@ -20,4 +20,12 @@ export class UserRepository {
 
     return this.repository.save(user);
   }
+
+  async findById(id: number): Promise<User | null> {
+    return this.repository.findOne({
+      where: {
+        id,
+      },
+    });
+  }
 }
