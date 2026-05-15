@@ -22,6 +22,7 @@ import {
 
 import { UserRoutes } from "./domains/User/routes/user.routes";
 import { QuestionRoutes } from "./domains/Question/routes/question.routes";
+import { QuizRoutes } from "./domains/Quiz/routes/quiz.routes";
 
 dotenv.config();
 
@@ -79,9 +80,11 @@ class Application {
 
     const userRoutes = Container.get(UserRoutes);
     const questionRoutes = Container.get(QuestionRoutes);
+    const quizRoutes = Container.get(QuizRoutes);
 
     v1Router.use("/users", userRoutes.router);
     v1Router.use("/questions", questionRoutes.router);
+    v1Router.use("/quizzes", quizRoutes.router);
 
     this.app.use("/api/v1", v1Router);
   }

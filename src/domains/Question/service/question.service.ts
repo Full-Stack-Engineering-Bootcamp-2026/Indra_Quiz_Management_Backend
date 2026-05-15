@@ -9,7 +9,7 @@ import { QuestionVersionRepository } from "../../QuestionVersion/repository/ques
 import { QuestionOptionRepository } from "../../QuestionOption/repository/question-option.repository";
 
 import { UserRepository } from "../../User/repository/user.repository";
-
+import { QuestionOption } from "../../QuestionOption/entities/QuestionOption.entity";
 import { NotFoundException } from "../../../common/exceptions";
 
 @Service()
@@ -46,12 +46,16 @@ export class QuestionService {
         isActive: true,
       });
 
-    const createdOptions = await this.questionOptionRepository.createOptions(
-      options.map((option) => ({
-        optionText: option,
-        questionVersion,
-      })),
-    );
+    let createdOptions: QuestionOption[] = [];
+
+    if (options && options.length > 0) {
+      createdOptions = await this.questionOptionRepository.createOptions(
+        options.map((option) => ({
+          optionText: option,
+          questionVersion,
+        })),
+      );
+    }
 
     return {
       publicId: question.publicId,
