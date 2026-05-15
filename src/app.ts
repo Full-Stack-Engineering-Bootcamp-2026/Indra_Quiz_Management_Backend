@@ -21,6 +21,7 @@ import {
 } from "./common/middleware/error-handler.middleware";
 
 import { UserRoutes } from "./domains/User/routes/user.routes";
+import { QuestionRoutes } from "./domains/Question/routes/question.routes";
 
 dotenv.config();
 
@@ -77,8 +78,10 @@ class Application {
     });
 
     const userRoutes = Container.get(UserRoutes);
+    const questionRoutes = Container.get(QuestionRoutes);
 
     v1Router.use("/users", userRoutes.router);
+    v1Router.use("/questions", questionRoutes.router);
 
     this.app.use("/api/v1", v1Router);
   }

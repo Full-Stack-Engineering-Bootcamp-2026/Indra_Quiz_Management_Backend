@@ -1,5 +1,5 @@
 import { Service } from 'typedi';
-import { ExampleRepository } from '../repository/example.repository';
+import { ExampleRepository } from '../repository/question-option.repository';
 import { LoggerService } from '../../../common/utils/logger.service';
 import { NotFoundException } from '../../../common/exceptions';
 import { ExampleOutDto, ExampleCreateDto, ExampleUpdateDto } from '../dto/example.dto';
