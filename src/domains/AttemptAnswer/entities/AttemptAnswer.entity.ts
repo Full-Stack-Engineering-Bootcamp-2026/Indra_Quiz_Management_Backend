@@ -41,12 +41,35 @@ export class AttemptAnswer {
   )
   questionVersion: QuestionVersion;
 
-  // for TEXT answer
   @Column({
     type: "text",
     nullable: true,
   })
   answerText: string;
+
+  @Column({
+    type: "text",
+  })
+  questionTextSnapshot: string;
+
+  @Column({
+    type: "int",
+  })
+  versionNumberSnapshot: number;
+
+  @Column({
+    type: "varchar",
+  })
+  answerTypeSnapshot: string;
+
+  @Column({
+    type: "json",
+    nullable: true,
+  })
+  optionsSnapshot: {
+    publicId: string;
+    optionText: string;
+  }[];
 
   @OneToMany(
     () => AttemptAnswerOption,

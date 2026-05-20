@@ -140,7 +140,9 @@ export class QuestionService {
   }
 
   async updateQuestion(publicId: string, payload: CreateQuestionDto) {
-    const { questionText, answerType, options } = payload;
+    const { questionText, answerType } = payload;
+
+    const options = answerType === "text" ? [] : payload.options || [];
 
     const question =
       await this.questionRepository.findQuestionByPublicId(publicId);
@@ -165,37 +167,50 @@ export class QuestionService {
     const newVersion =
       await this.questionVersionRepository.createQuestionVersion({
         question,
+
         versionNumber: activeVersion.versionNumber + 1,
+
         questionText,
+
         answerType,
+
         isActive: true,
       });
 
-    const createdOptions = await this.questionOptionRepository.createOptions(
-      options.map((option) => ({
-        optionText: option,
-        questionVersion: newVersion,
-      })),
-    );
+    let createdOptions: QuestionOption[] = [];
+
+    if (answerType !== "text") {
+      createdOptions = await this.questionOptionRepository.createOptions(
+        options.map((option) => ({
+          optionText: option,
+
+          questionVersion: newVersion,
+        })),
+      );
+    }
 
     return {
       publicId: question.publicId,
 
       version: {
         publicId: newVersion.publicId,
+
         versionNumber: newVersion.versionNumber,
+
         questionText: newVersion.questionText,
+
         answerType: newVersion.answerType,
+
         isActive: newVersion.isActive,
       },
 
       options: createdOptions.map((option) => ({
         publicId: option.publicId,
+
         optionText: option.optionText,
       })),
     };
   }
-
   async deleteQuestion(publicId: string) {
     const question =
       await this.questionRepository.findQuestionByPublicId(publicId);

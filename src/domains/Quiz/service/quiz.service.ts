@@ -227,6 +227,15 @@ export class QuizService {
           question,
           questionVersion: activeVersion,
           answerText: answerData.answerText,
+
+          // SNAPSHOTS
+          questionTextSnapshot: activeVersion.questionText,
+          versionNumberSnapshot: activeVersion.versionNumber,
+          answerTypeSnapshot: activeVersion.answerType,
+          optionsSnapshot: activeVersion.options.map((option) => ({
+            publicId: option.publicId,
+            optionText: option.optionText,
+          })),
         });
 
       if (
@@ -279,13 +288,21 @@ export class QuizService {
       answers: attempt.answers.map((answer) => ({
         questionPublicId: answer.question.publicId,
 
-        questionText: answer.questionVersion.questionText,
+        // SNAPSHOT DATA
 
-        versionNumber: answer.questionVersion.versionNumber,
+        questionText: answer.questionTextSnapshot,
 
-        answerType: answer.questionVersion.answerType,
+        versionNumber: answer.versionNumberSnapshot,
+
+        answerType: answer.answerTypeSnapshot,
 
         answerText: answer.answerText,
+
+        // ALL OPTIONS SNAPSHOT
+
+        options: answer.optionsSnapshot || [],
+
+        // SELECTED OPTIONS
 
         selectedOptions: answer.selectedOptions.map((selectedOption) => ({
           publicId: selectedOption.questionOption.publicId,
