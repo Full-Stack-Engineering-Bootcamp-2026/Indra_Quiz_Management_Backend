@@ -6,7 +6,7 @@ import { NotFoundException } from "../../../common/exceptions";
 import { QuestionRepository } from "../../Question/repository/question.repository";
 
 import { QuizQuestionRepository } from "../../QuizQuestion/repository/quiz-question.repository";
-
+import { QuizQuestion } from "../../QuizQuestion/entities/QuizQuestion.entity";
 import { AddQuestionsToQuizDto } from "../dto/add-questions-to-quiz.dto";
 import { QuizAttemptRepository } from "../../QuizAttempt/repository/quiz-attempt.repository";
 import { AttemptAnswerOptionRepository } from "../../AttemptAnswerOption/repository/attempt-answer-option.repository";
@@ -71,19 +71,54 @@ export class QuizService {
       throw new NotFoundException("One or more questions not found");
     }
 
-    const quizQuestions = await this.quizQuestionRepository.createQuizQuestions(
-      questions.map((question) => ({
-        quiz,
-        question,
-      })),
+    const existingQuizQuestions =
+      await this.quizQuestionRepository.findQuizQuestionsByQuizId(quiz.id);
+
+    const existingQuestionPublicIds = existingQuizQuestions.map(
+      (quizQuestion: QuizQuestion) => quizQuestion.question.publicId,
     );
+
+    const questionsToAdd = questions.filter(
+      (question) => !existingQuestionPublicIds.includes(question.publicId),
+    );
+
+    const questionsToRemove = existingQuizQuestions.filter(
+      (quizQuestion: QuizQuestion) =>
+        !questionPublicIds.includes(quizQuestion.question.publicId),
+    );
+
+    if (questionsToRemove.length > 0) {
+      await this.quizQuestionRepository.removeQuizQuestions(questionsToRemove);
+    }
+
+    let createdQuizQuestions: QuizQuestion[] = [];
+
+    if (questionsToAdd.length > 0) {
+      createdQuizQuestions =
+        await this.quizQuestionRepository.createQuizQuestions(
+          questionsToAdd.map((question) => ({
+            quiz,
+            question,
+          })),
+        );
+    }
 
     return {
       quizPublicId: quiz.publicId,
 
-      questions: quizQuestions.map((quizQuestion) => ({
-        publicId: quizQuestion.question.publicId,
-      })),
+      questions: [
+        ...existingQuizQuestions
+          .filter((quizQuestion: QuizQuestion) =>
+            questionPublicIds.includes(quizQuestion.question.publicId),
+          )
+          .map((quizQuestion: QuizQuestion) => ({
+            publicId: quizQuestion.question.publicId,
+          })),
+
+        ...createdQuizQuestions.map((quizQuestion: QuizQuestion) => ({
+          publicId: quizQuestion.question.publicId,
+        })),
+      ],
     };
   }
 
@@ -140,7 +175,11 @@ export class QuizService {
     }));
   }
 
-  async startQuizAttempt(quizPublicId: string, userId: number) {
+  async submitQuizAnswers(
+    quizPublicId: string,
+    userId: number,
+    payload: SubmitQuizDto,
+  ) {
     const quiz = await this.quizRepository.findQuizByPublicId(quizPublicId);
 
     if (!quiz) {
@@ -160,22 +199,9 @@ export class QuizService {
       user,
       quiz,
       attemptNumber: previousAttempts + 1,
+
+      submittedAt: new Date(),
     });
-
-    return {
-      attemptPublicId: attempt.publicId,
-      quizPublicId: quiz.publicId,
-      attemptNumber: attempt.attemptNumber,
-    };
-  }
-
-  async submitQuizAnswers(attemptPublicId: string, payload: SubmitQuizDto) {
-    const attempt =
-      await this.quizAttemptRepository.findAttemptByPublicId(attemptPublicId);
-
-    if (!attempt) {
-      throw new NotFoundException("Quiz attempt not found");
-    }
 
     for (const answerData of payload.answers) {
       const question =
@@ -201,6 +227,15 @@ export class QuizService {
           question,
           questionVersion: activeVersion,
           answerText: answerData.answerText,
+
+          // SNAPSHOTS
+          questionTextSnapshot: activeVersion.questionText,
+          versionNumberSnapshot: activeVersion.versionNumber,
+          answerTypeSnapshot: activeVersion.answerType,
+          optionsSnapshot: activeVersion.options.map((option) => ({
+            publicId: option.publicId,
+            optionText: option.optionText,
+          })),
         });
 
       if (
@@ -223,6 +258,7 @@ export class QuizService {
 
     return {
       attemptPublicId: attempt.publicId,
+
       submittedAnswers: payload.answers.length,
     };
   }
@@ -252,13 +288,21 @@ export class QuizService {
       answers: attempt.answers.map((answer) => ({
         questionPublicId: answer.question.publicId,
 
-        questionText: answer.questionVersion.questionText,
+        // SNAPSHOT DATA
 
-        versionNumber: answer.questionVersion.versionNumber,
+        questionText: answer.questionTextSnapshot,
 
-        answerType: answer.questionVersion.answerType,
+        versionNumber: answer.versionNumberSnapshot,
+
+        answerType: answer.answerTypeSnapshot,
 
         answerText: answer.answerText,
+
+        // ALL OPTIONS SNAPSHOT
+
+        options: answer.optionsSnapshot || [],
+
+        // SELECTED OPTIONS
 
         selectedOptions: answer.selectedOptions.map((selectedOption) => ({
           publicId: selectedOption.questionOption.publicId,
@@ -284,5 +328,29 @@ export class QuizService {
         title: attempt.quiz.title,
       },
     }));
+  }
+  async removeQuestionFromQuiz(quizPublicId: string, questionPublicId: string) {
+    const quiz = await this.quizRepository.findQuizByPublicId(quizPublicId);
+
+    if (!quiz) {
+      throw new NotFoundException("Quiz not found");
+    }
+
+    const question =
+      await this.questionRepository.findQuestionByPublicId(questionPublicId);
+
+    if (!question) {
+      throw new NotFoundException("Question not found");
+    }
+
+    await this.quizQuestionRepository.removeQuestionFromQuiz(
+      quiz.id,
+      question.id,
+    );
+
+    return {
+      quizPublicId: quiz.publicId,
+      questionPublicId: question.publicId,
+    };
   }
 }

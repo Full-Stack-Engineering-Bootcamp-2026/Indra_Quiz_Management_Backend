@@ -10,7 +10,11 @@ import { QuestionOptionRepository } from "../../QuestionOption/repository/questi
 
 import { UserRepository } from "../../User/repository/user.repository";
 import { QuestionOption } from "../../QuestionOption/entities/QuestionOption.entity";
-import { NotFoundException } from "../../../common/exceptions";
+import {
+  BadRequestException,
+  NotFoundException,
+} from "../../../common/exceptions";
+import { QuizQuestionRepository } from "../../QuizQuestion/repository/quiz-question.repository";
 
 @Service()
 export class QuestionService {
@@ -22,6 +26,7 @@ export class QuestionService {
     private readonly questionOptionRepository: QuestionOptionRepository,
 
     private readonly userRepository: UserRepository,
+    private readonly quizQuestionRepository: QuizQuestionRepository,
   ) {}
 
   async createQuestion(payload: CreateQuestionDto, userId: number) {
@@ -135,7 +140,9 @@ export class QuestionService {
   }
 
   async updateQuestion(publicId: string, payload: CreateQuestionDto) {
-    const { questionText, answerType, options } = payload;
+    const { questionText, answerType } = payload;
+
+    const options = answerType === "text" ? [] : payload.options || [];
 
     const question =
       await this.questionRepository.findQuestionByPublicId(publicId);
@@ -160,43 +167,67 @@ export class QuestionService {
     const newVersion =
       await this.questionVersionRepository.createQuestionVersion({
         question,
+
         versionNumber: activeVersion.versionNumber + 1,
+
         questionText,
+
         answerType,
+
         isActive: true,
       });
 
-    const createdOptions = await this.questionOptionRepository.createOptions(
-      options.map((option) => ({
-        optionText: option,
-        questionVersion: newVersion,
-      })),
-    );
+    let createdOptions: QuestionOption[] = [];
+
+    if (answerType !== "text") {
+      createdOptions = await this.questionOptionRepository.createOptions(
+        options.map((option) => ({
+          optionText: option,
+
+          questionVersion: newVersion,
+        })),
+      );
+    }
 
     return {
       publicId: question.publicId,
 
       version: {
         publicId: newVersion.publicId,
+
         versionNumber: newVersion.versionNumber,
+
         questionText: newVersion.questionText,
+
         answerType: newVersion.answerType,
+
         isActive: newVersion.isActive,
       },
 
       options: createdOptions.map((option) => ({
         publicId: option.publicId,
+
         optionText: option.optionText,
       })),
     };
   }
-
   async deleteQuestion(publicId: string) {
     const question =
       await this.questionRepository.findQuestionByPublicId(publicId);
 
     if (!question) {
       throw new NotFoundException("Question not found");
+    }
+
+    const quizQuestion =
+      await this.quizQuestionRepository.findQuizQuestionByQuestionId(
+        question.id,
+      );
+
+    if (quizQuestion) {
+      throw new BadRequestException(
+        "Question is already added to a quiz. Remove it from quiz first.",
+      );
     }
 
     await this.questionRepository.updateQuestion(question.id, {
