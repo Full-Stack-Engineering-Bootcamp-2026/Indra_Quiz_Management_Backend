@@ -10,7 +10,11 @@ import { QuestionOptionRepository } from "../../QuestionOption/repository/questi
 
 import { UserRepository } from "../../User/repository/user.repository";
 import { QuestionOption } from "../../QuestionOption/entities/QuestionOption.entity";
-import { NotFoundException } from "../../../common/exceptions";
+import {
+  BadRequestException,
+  NotFoundException,
+} from "../../../common/exceptions";
+import { QuizQuestionRepository } from "../../QuizQuestion/repository/quiz-question.repository";
 
 @Service()
 export class QuestionService {
@@ -22,6 +26,7 @@ export class QuestionService {
     private readonly questionOptionRepository: QuestionOptionRepository,
 
     private readonly userRepository: UserRepository,
+    private readonly quizQuestionRepository: QuizQuestionRepository,
   ) {}
 
   async createQuestion(payload: CreateQuestionDto, userId: number) {
@@ -197,6 +202,17 @@ export class QuestionService {
 
     if (!question) {
       throw new NotFoundException("Question not found");
+    }
+
+    const quizQuestion =
+      await this.quizQuestionRepository.findQuizQuestionByQuestionId(
+        question.id,
+      );
+
+    if (quizQuestion) {
+      throw new BadRequestException(
+        "Question is already added to a quiz. Remove it from quiz first.",
+      );
     }
 
     await this.questionRepository.updateQuestion(question.id, {

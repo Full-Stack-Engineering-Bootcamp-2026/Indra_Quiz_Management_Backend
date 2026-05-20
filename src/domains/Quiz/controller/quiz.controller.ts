@@ -53,26 +53,14 @@ export class QuizController {
       .status(HttpStatus.OK)
       .json(success(result, "Quizzes fetched successfully"));
   };
-  public startQuizAttempt = async (
+
+  public submitQuizAnswers = async (
     req: AuthRequest,
     res: Response,
   ): Promise<void> => {
-    const result = await this.quizService.startQuizAttempt(
+    const result = await this.quizService.submitQuizAnswers(
       req.params.quizPublicId as string,
       req.user!.userId,
-    );
-
-    res
-      .status(HttpStatus.CREATED)
-      .json(success(result, "Quiz started successfully"));
-  };
-
-  public submitQuizAnswers = async (
-    req: Request,
-    res: Response,
-  ): Promise<void> => {
-    const result = await this.quizService.submitQuizAnswers(
-      req.params.attemptPublicId as string,
       req.body,
     );
 
@@ -80,7 +68,6 @@ export class QuizController {
       .status(HttpStatus.OK)
       .json(success(result, "Quiz submitted successfully"));
   };
-
   public getAttemptDetails = async (
     req: Request,
     res: Response,
@@ -101,5 +88,19 @@ export class QuizController {
     res
       .status(HttpStatus.OK)
       .json(success(result, "Attempt history fetched successfully"));
+  };
+
+  public removeQuestionFromQuiz = async (
+    req: Request,
+    res: Response,
+  ): Promise<void> => {
+    const result = await this.quizService.removeQuestionFromQuiz(
+      req.params.quizPublicId as string,
+      req.params.questionPublicId as string,
+    );
+
+    res
+      .status(HttpStatus.OK)
+      .json(success(result, "Question removed from quiz successfully"));
   };
 }

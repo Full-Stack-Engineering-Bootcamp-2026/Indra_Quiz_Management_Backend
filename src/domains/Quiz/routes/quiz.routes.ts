@@ -27,32 +27,7 @@ export class QuizRoutes {
       this.quizController.createQuiz,
     );
 
-    this.router.post(
-      "/:quizPublicId/questions",
-      authenticate,
-      requireRole(UserRole.ADMIN),
-      validate(addQuestionsToQuizValidationSchema),
-      this.quizController.addQuestionsToQuiz,
-    );
-    this.router.get(
-      "/:quizPublicId",
-      authenticate,
-      this.quizController.getQuizDetails,
-    );
     this.router.get("/", authenticate, this.quizController.getAllQuizzes);
-
-    this.router.post(
-      "/:quizPublicId/start",
-      authenticate,
-      this.quizController.startQuizAttempt,
-    );
-
-    this.router.post(
-      "/attempts/:attemptPublicId/submit",
-      authenticate,
-      validate(submitQuizValidationSchema),
-      this.quizController.submitQuizAnswers,
-    );
 
     this.router.get(
       "/attempts/my-attempts",
@@ -64,6 +39,34 @@ export class QuizRoutes {
       "/attempts/:attemptPublicId",
       authenticate,
       this.quizController.getAttemptDetails,
+    );
+
+    this.router.post(
+      "/:quizPublicId/submit",
+      authenticate,
+      validate(submitQuizValidationSchema),
+      this.quizController.submitQuizAnswers,
+    );
+
+    this.router.post(
+      "/:quizPublicId/questions",
+      authenticate,
+      requireRole(UserRole.ADMIN),
+      validate(addQuestionsToQuizValidationSchema),
+      this.quizController.addQuestionsToQuiz,
+    );
+
+    this.router.delete(
+      "/:quizPublicId/questions/:questionPublicId",
+      authenticate,
+      requireRole(UserRole.ADMIN),
+      this.quizController.removeQuestionFromQuiz,
+    );
+
+    this.router.get(
+      "/:quizPublicId",
+      authenticate,
+      this.quizController.getQuizDetails,
     );
   }
 }
